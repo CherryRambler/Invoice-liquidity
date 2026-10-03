@@ -1,4 +1,6 @@
 const Invoice = require('../models/Invoice');
+const Token = require('../models/Token');
+const { sendUpiPayment } = require('../services/upiService');
 
 const createInvoice = async (req, res) => {
     try {
@@ -24,8 +26,6 @@ const getInvoices = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-const Token = require('../models/Token');
 
 const tokenizeInvoice = async (req, res) => {
     try {
@@ -53,5 +53,67 @@ const tokenizeInvoice = async (req, res) => {
     }
 };
 
-module.exports = { createInvoice, getInvoices, tokenizeInvoice };
+const payoutInvoice = async (req, res) => {
+    try {
+        const invoice = await Invoice.findById(req.params.id);
 
+        if (!invoice) {
+            return res.status(404).json({ message: 'Invoice not found' });
+        }
+
+        if (invoice.status !== 'tokenized') {
+            return res.status(400).json({ message: 'Invoice must be tokenized before payout' });
+        }
+
+        const token = await Token.findOne({ invoice: invoice._id });
+
+        if (!token || !token.isFullyFunded) {
+            return res.status(400).json({ message: 'Token must be fully funded before payout' });
+        }
+
+        const payment = await sendUpiPayment(invoice.businessName, token.amountFunded);
+
+        invoice.status = 'funded';
+        await invoice.save();
+
+        res.status(200).json({ invoice, payment });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+const repayInvoice = async (req, res) => {
+    try {
+        const invoice = await Invoice.findById(req.params.id);
+
+        if (!invoice) {
+            return res.status(404).json({ message: 'Invoice not found' });
+        }
+
+        if (invoice.status !== 'funded') {
+            return res.status(400).json({ message: 'Invoice must be funded before repayment' });
+        }
+
+        const token = await Token.findOne({ invoice: invoice._id }).populate('investments.investor');
+
+        const payouts = [];
+
+        for (const investment of token.investments) {
+            const payment = await sendUpiPayment(investment.investor.name, investment.amount);
+            payouts.push({
+                investorName: investment.investor.name,
+                amount: investment.amount,
+                transactionId: payment.transactionId,
+            });
+        }
+
+        invoice.status = 'repaid';
+        await invoice.save();
+
+        res.status(200).json({ invoice, payouts });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+module.exports = { createInvoice, getInvoices, tokenizeInvoice, payoutInvoice, repayInvoice };
