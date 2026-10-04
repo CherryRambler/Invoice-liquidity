@@ -52,10 +52,10 @@ function BusinessDashboard() {
 
     return (
         <div>
-            <h1>Business dashboard</h1>
+            <h2>Business dashboard</h2>
 
-            <form onSubmit={handleSubmit}>
-                <div>
+            <form className="card" onSubmit={handleSubmit}>
+                <div className="field">
                     <label>Business name</label>
                     <input
                         type="text"
@@ -65,8 +65,8 @@ function BusinessDashboard() {
                     />
                 </div>
 
-                <div>
-                    <label>Invoice amount</label>
+                <div className="field">
+                    <label>Invoice amount (₹)</label>
                     <input
                         type="number"
                         value={invoiceAmount}
@@ -75,7 +75,7 @@ function BusinessDashboard() {
                     />
                 </div>
 
-                <div>
+                <div className="field">
                     <label>Due date</label>
                     <input
                         type="date"
@@ -85,15 +85,24 @@ function BusinessDashboard() {
                     />
                 </div>
 
-                <button type="submit">Submit invoice</button>
+                <button type="submit" className="primary">Submit invoice</button>
             </form>
 
-            <h2>Your invoices</h2>
-            <ul>
-                {invoices.map((invoice) => (
-                    <li key={invoice._id}>
-                        {invoice.businessName} — ₹{invoice.invoiceAmount} — due {invoice.dueDate.slice(0, 10)} — status: {invoice.status}{' '}
+            <h3>Your invoices</h3>
+            {invoices.length === 0 && <p className="muted">No invoices yet.</p>}
 
+            {invoices.map((invoice) => (
+                <div className="card" key={invoice._id}>
+                    <div className="row">
+                        <strong>{invoice.businessName}</strong>
+                        <span className={`badge badge-${invoice.status}`}>{invoice.status}</span>
+                    </div>
+
+                    <p className="muted">
+                        ₹{invoice.invoiceAmount.toLocaleString('en-IN')} · due {invoice.dueDate.slice(0, 10)}
+                    </p>
+
+                    <div className="button-row">
                         {invoice.status === 'pending' && (
                             <button onClick={() => handleAction(invoice._id, 'tokenize')}>
                                 Verify and tokenize
@@ -111,9 +120,9 @@ function BusinessDashboard() {
                                 Simulate client repayment
                             </button>
                         )}
-                    </li>
-                ))}
-            </ul>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }

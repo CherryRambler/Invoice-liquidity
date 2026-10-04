@@ -44,27 +44,43 @@ function InvestorDashboard() {
 
     return (
         <div>
-            <h1>Investor dashboard</h1>
+            <h2>Investor dashboard</h2>
 
-            <ul>
-                {tokens.map((token) => (
-                    <li key={token._id}>
-                        Token for {token.invoice?.businessName} — funded ₹{token.amountFunded} of ₹{token.totalValue} —{' '}
-                        {token.isFullyFunded ? 'fully funded' : 'open for investment'}
+            {tokens.length === 0 && <p className="muted">No tokenized invoices yet.</p>}
 
-                        {!token.isFullyFunded && (
-                            <button onClick={() => setSelectedTokenId(token._id)}>
-                                Invest in this token
-                            </button>
-                        )}
-                    </li>
-                ))}
-            </ul>
+            {tokens.map((token) => (
+                <div className="card" key={token._id}>
+                    <div className="row">
+                        <strong>{token.invoice?.businessName}</strong>
+                        <span className={token.isFullyFunded ? 'badge badge-funded' : 'badge badge-tokenized'}>
+                            {token.isFullyFunded ? 'fully funded' : 'open'}
+                        </span>
+                    </div>
+
+                    <div className="progress">
+                        <div
+                            className="progress-fill"
+                            style={{ width: `${(token.amountFunded / token.totalValue) * 100}%` }}
+                        ></div>
+                    </div>
+
+                    <p className="muted">
+                        ₹{token.amountFunded.toLocaleString('en-IN')} of ₹{token.totalValue.toLocaleString('en-IN')} funded
+                    </p>
+
+                    {!token.isFullyFunded && (
+                        <button onClick={() => setSelectedTokenId(token._id)}>
+                            Invest in this token
+                        </button>
+                    )}
+                </div>
+            ))}
 
             {selectedTokenId && (
-                <form onSubmit={handleInvest}>
+                <form className="card" onSubmit={handleInvest}>
                     <h3>Invest in selected token</h3>
-                    <div>
+
+                    <div className="field">
                         <label>Your name</label>
                         <input
                             type="text"
@@ -74,7 +90,7 @@ function InvestorDashboard() {
                         />
                     </div>
 
-                    <div>
+                    <div className="field">
                         <label>Your email</label>
                         <input
                             type="email"
@@ -84,8 +100,8 @@ function InvestorDashboard() {
                         />
                     </div>
 
-                    <div>
-                        <label>Amount</label>
+                    <div className="field">
+                        <label>Amount (₹)</label>
                         <input
                             type="number"
                             value={amount}
@@ -94,8 +110,10 @@ function InvestorDashboard() {
                         />
                     </div>
 
-                    <button type="submit">Confirm investment</button>
-                    <button type="button" onClick={() => setSelectedTokenId(null)}>Cancel</button>
+                    <div className="button-row">
+                        <button type="submit" className="primary">Confirm investment</button>
+                        <button type="button" onClick={() => setSelectedTokenId(null)}>Cancel</button>
+                    </div>
                 </form>
             )}
         </div>
