@@ -1,12 +1,25 @@
+import { useState } from 'react';
 import BusinessDashboard from './pages/BusinessDashboard';
 import InvestorDashboard from './pages/InvestorDashboard';
 
 function App() {
+  const [activeTab, setActiveTab] = useState('business');
+
   return (
     <div>
-      <BusinessDashboard />
+      <nav>
+        <button onClick={() => setActiveTab('business')}>
+          Business
+        </button>
+        <button onClick={() => setActiveTab('investor')}>
+          Investor
+        </button>
+      </nav>
+
       <hr />
-      <InvestorDashboard />
+
+      {activeTab === 'business' && <BusinessDashboard />}
+      {activeTab === 'investor' && <InvestorDashboard />}
     </div>
   );
 }

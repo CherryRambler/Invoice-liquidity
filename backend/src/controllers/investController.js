@@ -41,7 +41,7 @@ const investInToken = async (req, res) => {
 
 const getTokens = async (req, res) => {
     try {
-        const tokens = await Token.find();
+        const tokens = await Token.find().populate('invoice');
         res.status(200).json(tokens);
     } catch (error) {
         res.status(500).json({ message: error.message });

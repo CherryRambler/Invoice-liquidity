@@ -49,7 +49,7 @@ function InvestorDashboard() {
             <ul>
                 {tokens.map((token) => (
                     <li key={token._id}>
-                        Token for invoice {token.invoice} — funded ₹{token.amountFunded} of ₹{token.totalValue} —{' '}
+                        Token for {token.invoice?.businessName} — funded ₹{token.amountFunded} of ₹{token.totalValue} —{' '}
                         {token.isFullyFunded ? 'fully funded' : 'open for investment'}
 
                         {!token.isFullyFunded && (
