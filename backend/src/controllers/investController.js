@@ -3,35 +3,44 @@ const Investor = require('../models/Investor');
 
 const investInToken = async (req, res) => {
     try {
-        const { name, email, amount } = req.body;
-        const token = await Token.findById(req.params.id);
+        const { name, email } = req.body;
+        const amount = Number(req.body.amount);
 
-        if (!token) {
+        if (!Number.isFinite(amount) || amount <= 0) {
+            return res.status(400).json({ message: 'Amount must be a positive number' });
+        }
+
+        const existing = await Token.findById(req.params.id);
+        if (!existing) {
             return res.status(404).json({ message: 'Token not found' });
         }
 
-        if (token.isFullyFunded) {
-            return res.status(400).json({ message: 'This token is already fully funded' });
-        }
-
-        const remaining = token.totalValue - token.amountFunded;
-        if (amount > remaining) {
-            return res.status(400).json({ message: `Amount exceeds remaining need of ${remaining}` });
-        }
-
-        let investor = await Investor.findOne({ email });
+        let investor = await Investor.findOne({ email: email.toLowerCase().trim() });
         if (!investor) {
             investor = await Investor.create({ name, email });
         }
 
-        token.investments.push({ investor: investor._id, amount });
-        token.amountFunded += amount;
+        const token = await Token.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                isFullyFunded: false,
+                $expr: { $lte: [{ $add: ['$amountFunded', amount] }, '$totalValue'] },
+            },
+            {
+                $inc: { amountFunded: amount },
+                $push: { investments: { investor: investor._id, amount } },
+            },
+            { new: true }
+        );
+
+        if (!token) {
+            return res.status(400).json({ message: 'Token is fully funded or amount exceeds what is still needed' });
+        }
 
         if (token.amountFunded >= token.totalValue) {
             token.isFullyFunded = true;
+            await token.save();
         }
-
-        await token.save();
 
         res.status(200).json(token);
     } catch (error) {

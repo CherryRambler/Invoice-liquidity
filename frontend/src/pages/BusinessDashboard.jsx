@@ -6,6 +6,7 @@ function BusinessDashboard() {
     const [businessName, setBusinessName] = useState('');
     const [invoiceAmount, setInvoiceAmount] = useState('');
     const [dueDate, setDueDate] = useState('');
+    const [busyId, setBusyId] = useState(null);
 
     const fetchInvoices = () => {
         apiClient.get('/invoices')
@@ -41,12 +42,17 @@ function BusinessDashboard() {
     };
 
     const handleAction = (invoiceId, action) => {
+        setBusyId(invoiceId);
+
         apiClient.post(`/invoices/${invoiceId}/${action}`)
             .then(() => {
                 fetchInvoices();
             })
             .catch((error) => {
                 alert(error.response?.data?.message || `Failed to ${action}`);
+            })
+            .finally(() => {
+                setBusyId(null);
             });
     };
 
@@ -104,20 +110,29 @@ function BusinessDashboard() {
 
                     <div className="button-row">
                         {invoice.status === 'pending' && (
-                            <button onClick={() => handleAction(invoice._id, 'tokenize')}>
-                                Verify and tokenize
+                            <button
+                                disabled={busyId === invoice._id}
+                                onClick={() => handleAction(invoice._id, 'tokenize')}
+                            >
+                                {busyId === invoice._id ? 'Processing...' : 'Verify and tokenize'}
                             </button>
                         )}
 
                         {invoice.status === 'tokenized' && (
-                            <button onClick={() => handleAction(invoice._id, 'payout')}>
-                                Receive funds
+                            <button
+                                disabled={busyId === invoice._id}
+                                onClick={() => handleAction(invoice._id, 'payout')}
+                            >
+                                {busyId === invoice._id ? 'Processing...' : 'Receive funds'}
                             </button>
                         )}
 
                         {invoice.status === 'funded' && (
-                            <button onClick={() => handleAction(invoice._id, 'repay')}>
-                                Simulate client repayment
+                            <button
+                                disabled={busyId === invoice._id}
+                                onClick={() => handleAction(invoice._id, 'repay')}
+                            >
+                                {busyId === invoice._id ? 'Processing...' : 'Simulate client repayment'}
                             </button>
                         )}
                     </div>

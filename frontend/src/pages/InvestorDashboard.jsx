@@ -7,6 +7,7 @@ function InvestorDashboard() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [amount, setAmount] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     const fetchTokens = () => {
         apiClient.get('/investors/tokens')
@@ -24,6 +25,7 @@ function InvestorDashboard() {
 
     const handleInvest = (e) => {
         e.preventDefault();
+        setSubmitting(true);
 
         apiClient.post(`/investors/tokens/${selectedTokenId}/invest`, {
             name,
@@ -39,6 +41,9 @@ function InvestorDashboard() {
             })
             .catch((error) => {
                 alert(error.response?.data?.message || 'Investment failed');
+            })
+            .finally(() => {
+                setSubmitting(false);
             });
     };
 
@@ -111,7 +116,9 @@ function InvestorDashboard() {
                     </div>
 
                     <div className="button-row">
-                        <button type="submit" className="primary">Confirm investment</button>
+                        <button type="submit" className="primary" disabled={submitting}>
+                            {submitting ? 'Investing...' : 'Confirm investment'}
+                        </button>
                         <button type="button" onClick={() => setSelectedTokenId(null)}>Cancel</button>
                     </div>
                 </form>
