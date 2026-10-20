@@ -1,6 +1,7 @@
 const Invoice = require('../models/Invoice');
 const Token = require('../models/Token');
 const { sendUpiPayment } = require('../services/upiService');
+const DISCOUNT_RATE = 0.05;
 
 const createInvoice = async (req, res) => {
     try {
@@ -39,9 +40,13 @@ const tokenizeInvoice = async (req, res) => {
             return res.status(400).json({ message: 'Invoice is not in pending status' });
         }
 
+        const fundingTarget = Math.round(invoice.invoiceAmount * (1 - DISCOUNT_RATE));
+
         const token = await Token.create({
             invoice: invoice._id,
-            totalValue: invoice.invoiceAmount,
+            totalValue: fundingTarget,
+            faceValue: invoice.invoiceAmount,
+            discountRate: DISCOUNT_RATE,
         });
 
         invoice.status = 'tokenized';
@@ -96,13 +101,18 @@ const repayInvoice = async (req, res) => {
 
         const token = await Token.findOne({ invoice: invoice._id }).populate('investments.investor');
 
+        const faceValue = token.faceValue ?? token.totalValue;
         const payouts = [];
 
         for (const investment of token.investments) {
-            const payment = await sendUpiPayment(investment.investor.name, investment.amount);
+            const owed = Math.round((investment.amount * faceValue / token.totalValue) * 100) / 100;
+            const payment = await sendUpiPayment(investment.investor.name, owed);
+
             payouts.push({
                 investorName: investment.investor.name,
-                amount: investment.amount,
+                invested: investment.amount,
+                received: owed,
+                profit: Math.round((owed - investment.amount) * 100) / 100,
                 transactionId: payment.transactionId,
             });
         }

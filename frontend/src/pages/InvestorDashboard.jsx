@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import apiClient from '../api/client';
 
+const formatINR = (value) => value.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+
 function InvestorDashboard() {
     const [tokens, setTokens] = useState([]);
     const [selectedTokenId, setSelectedTokenId] = useState(null);
@@ -47,39 +49,54 @@ function InvestorDashboard() {
             });
     };
 
+    const selectedToken = tokens.find((token) => token._id === selectedTokenId);
+    const selectedFace = selectedToken ? (selectedToken.faceValue ?? selectedToken.totalValue) : 0;
+    const expectedPayout = selectedToken && Number(amount) > 0
+        ? (Number(amount) * selectedFace) / selectedToken.totalValue
+        : 0;
+
     return (
         <div>
             <h2>Investor dashboard</h2>
 
             {tokens.length === 0 && <p className="muted">No tokenized invoices yet.</p>}
 
-            {tokens.map((token) => (
-                <div className="card" key={token._id}>
-                    <div className="row">
-                        <strong>{token.invoice?.businessName}</strong>
-                        <span className={token.isFullyFunded ? 'badge badge-funded' : 'badge badge-tokenized'}>
-                            {token.isFullyFunded ? 'fully funded' : 'open'}
-                        </span>
+            {tokens.map((token) => {
+                const face = token.faceValue ?? token.totalValue;
+                const returnPct = ((face / token.totalValue - 1) * 100).toFixed(2);
+
+                return (
+                    <div className="card" key={token._id}>
+                        <div className="row">
+                            <strong>{token.invoice?.businessName}</strong>
+                            <span className={token.isFullyFunded ? 'badge badge-funded' : 'badge badge-tokenized'}>
+                                {token.isFullyFunded ? 'fully funded' : 'open'}
+                            </span>
+                        </div>
+
+                        <div className="progress">
+                            <div
+                                className="progress-fill"
+                                style={{ width: `${(token.amountFunded / token.totalValue) * 100}%` }}
+                            ></div>
+                        </div>
+
+                        <p className="muted">
+                            ₹{formatINR(token.amountFunded)} of ₹{formatINR(token.totalValue)} funded
+                        </p>
+
+                        <p className="muted">
+                            Pays back ₹{formatINR(face)} at maturity · return {returnPct}%
+                        </p>
+
+                        {!token.isFullyFunded && (
+                            <button onClick={() => setSelectedTokenId(token._id)}>
+                                Invest in this token
+                            </button>
+                        )}
                     </div>
-
-                    <div className="progress">
-                        <div
-                            className="progress-fill"
-                            style={{ width: `${(token.amountFunded / token.totalValue) * 100}%` }}
-                        ></div>
-                    </div>
-
-                    <p className="muted">
-                        ₹{token.amountFunded.toLocaleString('en-IN')} of ₹{token.totalValue.toLocaleString('en-IN')} funded
-                    </p>
-
-                    {!token.isFullyFunded && (
-                        <button onClick={() => setSelectedTokenId(token._id)}>
-                            Invest in this token
-                        </button>
-                    )}
-                </div>
-            ))}
+                );
+            })}
 
             {selectedTokenId && (
                 <form className="card" onSubmit={handleInvest}>
@@ -106,14 +123,22 @@ function InvestorDashboard() {
                     </div>
 
                     <div className="field">
-                        <label>Amount (₹)</label>
+                        <label>Amount (₹, whole rupees)</label>
                         <input
                             type="number"
+                            step="1"
+                            min="1"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             required
                         />
                     </div>
+
+                    {expectedPayout > 0 && (
+                        <p className="muted">
+                            You will receive ₹{formatINR(expectedPayout)} at repayment.
+                        </p>
+                    )}
 
                     <div className="button-row">
                         <button type="submit" className="primary" disabled={submitting}>

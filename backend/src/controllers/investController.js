@@ -6,8 +6,8 @@ const investInToken = async (req, res) => {
         const { name, email } = req.body;
         const amount = Number(req.body.amount);
 
-        if (!Number.isFinite(amount) || amount <= 0) {
-            return res.status(400).json({ message: 'Amount must be a positive number' });
+        if (!Number.isInteger(amount) || amount <= 0) {
+            return res.status(400).json({ message: 'Amount must be a whole number of rupees greater than zero' });
         }
 
         const existing = await Token.findById(req.params.id);

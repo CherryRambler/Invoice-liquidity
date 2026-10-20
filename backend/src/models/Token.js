@@ -10,6 +10,12 @@ const tokenSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    faceValue: {
+        type: Number,
+    },
+    discountRate: {
+        type: Number,
+    },
     amountFunded: {
         type: Number,
         default: 0,
