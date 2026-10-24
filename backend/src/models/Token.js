@@ -5,6 +5,7 @@ const tokenSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Invoice',
         required: true,
+        unique: true,
     },
     totalValue: {
         type: Number,
@@ -28,7 +29,7 @@ const tokenSchema = new mongoose.Schema({
         {
             investor: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: 'Investor',
+                ref: 'User',
             },
             amount: Number,
             investedAt: {

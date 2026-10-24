@@ -15,27 +15,6 @@ body {
   padding: 24px 16px;
 }
 
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.tab {
-  padding: 8px 20px;
-  border: 1px solid #cbd2d9;
-  border-radius: 8px;
-  background: #fff;
-  cursor: pointer;
-  font-size: 15px;
-}
-
-.tab.active {
-  background: #1f4fd8;
-  border-color: #1f4fd8;
-  color: #fff;
-}
-
 .card {
   background: #fff;
   border: 1px solid #e1e5ea;
@@ -103,6 +82,11 @@ button.primary {
   color: #8d6e00;
 }
 
+.badge-verified {
+  background: #e8e1ff;
+  color: #5b3cc4;
+}
+
 .badge-tokenized {
   background: #dbe7ff;
   color: #1f4fd8;
@@ -133,10 +117,49 @@ button.primary {
 
 .button-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.field select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd2d9;
+  border-radius: 8px;
+  font-size: 15px;
+  background: #fff;
+}
+
+.auth-card {
+  max-width: 420px;
+}
+
+.error-text {
+  color: #b42318;
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-user .muted {
+  margin: 0;
 }

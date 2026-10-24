@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 
-const investorSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
+        trim: true,
     },
     email: {
         type: String,
@@ -12,12 +13,21 @@ const investorSchema = new mongoose.Schema({
         lowercase: true,
         trim: true,
     },
+    passwordHash: {
+        type: String,
+        required: true,
+    },
+    role: {
+        type: String,
+        enum: ['business', 'investor'],
+        required: true,
+    },
     createdAt: {
         type: Date,
         default: Date.now,
     },
 });
 
-const Investor = mongoose.model('Investor', investorSchema);
+const User = mongoose.model('User', userSchema);
 
-module.exports = Investor;
+module.exports = User;
